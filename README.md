@@ -4,9 +4,9 @@ CheckBoxComboBox
 Forked from Martin Lottering project (visible on codeproject.com)
 
 The main addition is a DataGridViewCheckBoxComboBoxColumn which allows the use of this control in a...DataGridView.
+And some minor corrections in order to make the control work smoothly.
 
-It's designed to use DataSource capabilities.
-If the column is bound to a Dataset, the linked property must be set to Object type.
+It's designed to use DataSource capabilities. If the column is bound to a Dataset, the linked property must be set to Object type.
 
 ```
 List<Status> statuses = new List<Status>();
@@ -22,3 +22,6 @@ comboboxColumn.ValueMember = "Selected";
 comboboxColumn.DisplayMemberSingleItem = "Name";
 comboboxColumn.DisplayMember = "NameConcatenated";
 ```
+
+The value retrieved when using ```DataGridView[rowIndex, colIndex].Value``` is a ```Dictionary<String, Object>``` where Object is an ObjectSelectionWrapper object.
+The real stored value can be retrieved using ObjectSelectionWrapper.Item property.

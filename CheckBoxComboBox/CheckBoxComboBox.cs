@@ -184,7 +184,7 @@ namespace PresentationControls
 
         #region EVENT CALLERS and OVERRIDES e.g. OnResize()
 
-        protected void OnCheckBoxCheckedChanged(object sender, EventArgs e)
+        protected virtual void OnCheckBoxCheckedChanged(object sender, EventArgs e)
         {
             string ListText = GetCSVText(true);
             // The DropDownList style seems to require that the text
@@ -241,9 +241,11 @@ namespace PresentationControls
         public void Clear()
         {
             this.Items.Clear();
+
             if (DropDownStyle == ComboBoxStyle.DropDownList && DataSource == null)
                 _MustAddHiddenItem = true;                
-        }        /// <summary>
+        }
+        /// <summary>
         /// Uncheck all items.
         /// </summary>
         public void ClearSelection()

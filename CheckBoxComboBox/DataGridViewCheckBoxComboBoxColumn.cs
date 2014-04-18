@@ -18,16 +18,16 @@ namespace PresentationControls
         /// <summary>
         /// TODO: Documentation Member
         /// </summary>
-        private String _displayMemberSingleItem = String.Empty;
+        private String _displayMemberSingleItem = "Name";
         #endregion
 
         #region PROPERTIES
         /// <summary>
-        /// 
+        /// TODO: Documentation Property
         /// </summary>
-        [Category("Aloes")]
+        [Category("Data")]
         [Description("")]
-        [DefaultValue("")]
+        [DefaultValue("Name")]
         public String DisplayMemberSingleItem
         {
             get { return _displayMemberSingleItem; }
@@ -47,7 +47,7 @@ namespace PresentationControls
         }
 
         /// <summary>
-        /// Clone override is needed in order to store property set in Designer
+        /// Clone override is needed in order to store custom properties set in Designer
         /// </summary>
         /// <returns></returns>
         public override object Clone()
@@ -99,25 +99,19 @@ namespace PresentationControls
 
                 if (value != Convert.DBNull)
                 {
-                    DataGridViewCheckBoxComboBoxControl control = this.DataGridView.EditingControl as DataGridViewCheckBoxComboBoxControl;
+                    Dictionary<String, Object> parsedValues = value as Dictionary<String, Object>;
 
-                    if (control != null)
+                    foreach (KeyValuePair<String, Object> parsedValue in parsedValues)
                     {
-                        foreach (CheckBoxComboBoxItem item in control.CheckBoxItems)
-                        {
-                            if (item.Checked)
-                            {
-                                if (String.IsNullOrEmpty(result))
-                                    result = item.Text;
-                                else
-                                    result = String.Format(CultureInfo.CurrentCulture,
-                                                           "{0}, {1}",
-                                                           result, item.Text);
-                            }
-                        }
+                        result = String.Format(CultureInfo.CurrentCulture,
+                                               "{0}, {1}",
+                                               result, parsedValue.Key);
                     }
                 }
 
+                if (!String.IsNullOrEmpty(result))
+                    result = result.Substring(2, result.Length - 2);
+                
                 return result;
             }
 
@@ -133,15 +127,15 @@ namespace PresentationControls
             {
                 DataGridViewCheckBoxComboBoxControl control = this.DataGridView.EditingControl as DataGridViewCheckBoxComboBoxControl;
 
-                var t = new Dictionary<String, Object>();
+                Dictionary<String, Object> parsedValues = new Dictionary<String, Object>();
 
                 foreach (CheckBoxComboBoxItem item in control.CheckBoxItems)
                 {
                     if (item.Checked)
-                        t.Add(item.Text, item.ComboBoxItem);
+                        parsedValues.Add(item.Text, item.ComboBoxItem);
                 }
 
-                return t;
+                return parsedValues;
             }
 
             /// <summary>
@@ -163,9 +157,9 @@ namespace PresentationControls
 
                 if (this.Value != Convert.DBNull)
                 {
-                    Dictionary<String, Object> t = this.Value as Dictionary<String, Object>;
+                    Dictionary<String, Object> values = this.Value as Dictionary<String, Object>;
 
-                    foreach (String key in t.Keys)
+                    foreach (String key in values.Keys)
                         control.CheckBoxItems[key].Checked = true;
                 }
 
@@ -201,20 +195,8 @@ namespace PresentationControls
             /// </summary>
             public object EditingControlFormattedValue
             {
-                get { return base.Text; }
-                set
-                {
-                    foreach (CheckBoxComboBoxItem item in base.CheckBoxItems)
-                        item.Checked = false;
-
-                    String[] keys = value.ToString().Replace(" ", String.Empty).Split(',');
-
-                    foreach (String key in keys)
-                    {
-                        if (!String.IsNullOrEmpty(key))
-                            base.CheckBoxItems[key].Checked = true;
-                    }
-                }
+                get { return base.GetCSVText(false); }
+                set { }
             }
             /// <summary>
             /// Implements the IDataGridViewEditingControl.EditingControlRowIndex ctl.
@@ -245,7 +227,7 @@ namespace PresentationControls
             /// Notify the DataGridView that the contents of the cell have changed.
             /// </summary>
             /// <param name="e"></param>
-            protected override void OnTextChanged(EventArgs e)
+            protected override void OnCheckBoxCheckedChanged(object sender, EventArgs e)
             {
                 if (this.EditingControlDataGridView != null)
                 {
@@ -253,7 +235,7 @@ namespace PresentationControls
                     this.EditingControlDataGridView.NotifyCurrentCellDirty(true);
                 }
 
-                base.OnTextChanged(e);
+                base.OnCheckBoxCheckedChanged(sender, e);
             }
 
             /// <summary>
