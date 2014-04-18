@@ -2,12 +2,8 @@
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Drawing;
-using System.Data;
-using System.Text;
-using System.Windows.Forms;
 using System.Reflection;
-using System.Collections.ObjectModel;
-using System.Collections.Specialized;
+using System.Windows.Forms;
 
 namespace PresentationControls
 {
@@ -410,7 +406,7 @@ namespace PresentationControls
         public void SynchroniseControlsWithComboBoxItems()
         {
             SuspendLayout();
-            if (_CheckBoxComboBox._MustAddHiddenItem)
+            if (_CheckBoxComboBox._MustAddHiddenItem && _CheckBoxComboBox.DataSource == null)
             {
                 _CheckBoxComboBox.Items.Insert(
                     0, _CheckBoxComboBox.GetCSVText(false)); // INVISIBLE ITEM

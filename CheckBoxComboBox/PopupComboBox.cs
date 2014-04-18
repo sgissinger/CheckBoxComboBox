@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.ComponentModel;
-using System.Data;
 using System.Drawing;
-using System.Text;
-using System.Windows.Forms;
 using System.Security.Permissions;
+using System.Windows.Forms;
 
 namespace PresentationControls
 {
@@ -89,9 +86,13 @@ namespace PresentationControls
                 {
                     // Blocks a redisplay when the user closes the control by clicking 
                     // on the combobox.
-                    TimeSpan TimeSpan = DateTime.Now.Subtract(dropDown.LastClosedTimeStamp);
-                    if (TimeSpan.TotalMilliseconds > 500)
-                        ShowDropDown();
+                    BeginInvoke(new MethodInvoker(() =>
+                    {
+                        TimeSpan TimeSpan = DateTime.Now.Subtract(dropDown.LastClosedTimeStamp);
+
+                        if (TimeSpan.TotalMilliseconds > 500)
+                            ShowDropDown();
+                    }));
                     return;
                 }
             }

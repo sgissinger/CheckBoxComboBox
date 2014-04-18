@@ -97,8 +97,8 @@ namespace PresentationControls
                     if (Item.Selected)
                         Text += (
                             string.IsNullOrEmpty(Text)
-                            ? String.Format("\"{0}\"", Item.Name)
-                            : String.Format(" & \"{0}\"", Item.Name));
+                            ? String.Format("{0}", Item.Name)
+                            : String.Format(", {0}", Item.Name));
                 return Text;
             }
         }
