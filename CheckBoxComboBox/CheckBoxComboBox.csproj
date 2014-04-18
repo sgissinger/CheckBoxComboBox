@@ -66,6 +66,7 @@
     <Compile Include="CheckBoxComboBox.Designer.cs">
       <DependentUpon>CheckBoxComboBox.cs</DependentUpon>
     </Compile>
+    <Compile Include="DataGridViewCheckBoxComboBoxColumn.cs" />
     <Compile Include="GripBounds.cs" />
     <Compile Include="NativeMethods.cs" />
     <Compile Include="Popup.cs">
