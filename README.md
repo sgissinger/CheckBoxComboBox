@@ -17,6 +17,7 @@ statuses.Add(new Status(3, "Inserted"));
 statuses.Add(new Status(4, "Updated"));
 statuses.Add(new Status(5, "Deleted"));
 
+
 DataGridViewCheckBoxComboBoxColumn comboboxColumn = new DataGridViewCheckBoxComboBoxColumn();
 
 comboboxColumn.DataSource = new ListSelectionWrapper<Status>(statuses);
@@ -25,7 +26,12 @@ comboboxColumn.DisplayMemberSingleItem = "Name";
 comboboxColumn.DisplayMember = "NameConcatenated";
 
 
-var values = this.DataGridView[0,0].Value as Dictionary<String, Object>;
+DataGridView dataGridView = new DataGridView();
+dataGridView.Columns.Add(comboboxColumn);
+
+...
+
+var values = dataGridView[0,0].Value as Dictionary<String, Object>;
 
 foreach (var val in values)
 {
@@ -34,6 +40,3 @@ foreach (var val in values)
   Status finalVal = wrappedVal.Item;
 }
 ```
-
-The value retrieved when using ```DataGridView[rowIndex, colIndex].Value``` is a ```Dictionary<String, Object>``` where Object is an ObjectSelectionWrapper object.
-The real stored value can be retrieved using ObjectSelectionWrapper.Item property.
