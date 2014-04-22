@@ -16,12 +16,14 @@ namespace PresentationControls
     public class ListSelectionWrapper<T> : List<ObjectSelectionWrapper<T>>
     {
         #region CONSTRUCTOR
-
         /// <summary>
         /// No property on the object is specified for display purposes, so simple ToString() operation 
         /// will be performed. And no Counts will be displayed
         /// </summary>
-        public ListSelectionWrapper(IEnumerable source) : this(source, false) { }
+        public ListSelectionWrapper(IEnumerable source)
+            : this(source, false)
+        { }
+
         /// <summary>
         /// No property on the object is specified for display purposes, so simple ToString() operation 
         /// will be performed.
@@ -29,18 +31,24 @@ namespace PresentationControls
         public ListSelectionWrapper(IEnumerable source, bool showCounts)
             : base()
         {
-            _Source = source;
-            _ShowCounts = showCounts;
-            if (_Source is IBindingList)
-                ((IBindingList)_Source).ListChanged += new ListChangedEventHandler(ListSelectionWrapper_ListChanged);
-            Populate();
+            _source = source;
+            _showCounts = showCounts;
+
+            if (_source is IBindingList)
+                ((IBindingList)_source).ListChanged += new ListChangedEventHandler(ListSelectionWrapper_ListChanged);
+
+            this.Populate();
         }
+
         /// <summary>
         /// A Display "Name" property is specified. ToString() will not be performed on items.
         /// This is specifically useful on DataTable implementations, or where PropertyDescriptors are used to read the values.
         /// If a PropertyDescriptor is not found, a Property will be used.
         /// </summary>
-        public ListSelectionWrapper(IEnumerable source, string usePropertyAsDisplayName) : this(source, false, usePropertyAsDisplayName) { }
+        public ListSelectionWrapper(IEnumerable source, string usePropertyAsDisplayName)
+            : this(source, false, usePropertyAsDisplayName)
+        { }
+
         /// <summary>
         /// A Display "Name" property is specified. ToString() will not be performed on items.
         /// This is specifically useful on DataTable implementations, or where PropertyDescriptors are used to read the values.
@@ -49,106 +57,126 @@ namespace PresentationControls
         public ListSelectionWrapper(IEnumerable source, bool showCounts, string usePropertyAsDisplayName)
             : this(source, showCounts)
         {
-            _DisplayNameProperty = usePropertyAsDisplayName;
+            _displayNameProperty = usePropertyAsDisplayName;
         }
-
         #endregion
 
-        #region PRIVATE PROPERTIES
-
+        #region MEMBERS
         /// <summary>
         /// Is a Count indicator used.
         /// </summary>
-        private bool _ShowCounts;
+        private Boolean _showCounts;
         /// <summary>
         /// The original List of values wrapped. A "Selected" and possibly "Count" functionality is added.
         /// </summary>
-        private IEnumerable _Source;
+        private IEnumerable _source;
         /// <summary>
         /// Used to indicate NOT to use ToString(), but read this property instead as a display value.
         /// </summary>
-        private string _DisplayNameProperty = null;
-
+        private String _displayNameProperty = null;
+        /// <summary>
+        /// TODO: Documentation Member
+        /// </summary>
+        private String _textSeparator = ", ";
         #endregion
 
-        #region PUBLIC PROPERTIES
-
+        #region PROPERTIES
         /// <summary>
         /// When specified, indicates that ToString() should not be performed on the items. 
         /// This property will be read instead. 
         /// This is specifically useful on DataTable implementations, where PropertyDescriptors are used to read the values.
         /// </summary>
-        public string DisplayNameProperty
+        public String DisplayNameProperty
         {
-            get { return _DisplayNameProperty; }
-            set { _DisplayNameProperty = value; }
+            get { return _displayNameProperty; }
+            set { _displayNameProperty = value; }
+        }
+        /// <summary>
+        /// TODO: Documentation Property
+        /// </summary>
+        public String TextSeparator
+        {
+            get { return _textSeparator; }
+            set { _textSeparator = value; }
         }
         /// <summary>
         /// Builds a concatenation list of selected items in the list.
         /// </summary>
-        public string SelectedNames
+        public String SelectedNames
         {
             get
             {
-                string Text = "";
-                foreach (ObjectSelectionWrapper<T> Item in this)
-                    if (Item.Selected)
-                        Text += (
-                            string.IsNullOrEmpty(Text)
-                            ? String.Format("{0}", Item.Name)
-                            : String.Format(", {0}", Item.Name));
-                return Text;
+                String text = String.Empty;
+
+                foreach (ObjectSelectionWrapper<T> item in this)
+                {
+                    if (item.Selected)
+                    {
+                        text += String.IsNullOrEmpty(text) ? item.Name
+                                                           : String.Format("{0}{1}", this.TextSeparator, item.Name);
+                    }
+                }
+                return text;
             }
         }
         /// <summary>
         /// Indicates whether the Item display value (Name) should include a count.
         /// </summary>
-        public bool ShowCounts
+        public Boolean ShowCounts
         {
-            get { return _ShowCounts; }
-            set { _ShowCounts = value; }
+            get { return _showCounts; }
+            set { _showCounts = value; }
         }
-
         #endregion
 
         #region HELPER MEMBERS
-
         /// <summary>
         /// Reset all counts to zero.
         /// </summary>
         public void ClearCounts()
         {
-            foreach (ObjectSelectionWrapper<T> Item in this)
-                Item.Count = 0;
+            foreach (ObjectSelectionWrapper<T> item in this)
+                item.Count = 0;
         }
+
         /// <summary>
         /// Creates a ObjectSelectionWrapper item.
         /// Note that the constructor signature of sub classes classes are important.
         /// </summary>
-        /// <param name="Object"></param>
+        /// <param name="obj"></param>
         /// <returns></returns>
-        private ObjectSelectionWrapper<T> CreateSelectionWrapper(IEnumerator Object)
+        private ObjectSelectionWrapper<T> CreateSelectionWrapper(IEnumerator obj)
         {
-            Type[] Types = new Type[] { typeof(T), this.GetType() };
-            ConstructorInfo CI = typeof(ObjectSelectionWrapper<T>).GetConstructor(Types);
-            if (CI == null)
+            Type[] types = new Type[] { typeof(T), this.GetType() };
+            ConstructorInfo ci = typeof(ObjectSelectionWrapper<T>).GetConstructor(types);
+
+            if (ci == null)
+            {
                 throw new Exception(String.Format(
                               "The selection wrapper class {0} must have a constructor with ({1} Item, {2} Container) parameters.",
                               typeof(ObjectSelectionWrapper<T>),
                               typeof(T),
                               this.GetType()));
-            object[] parameters = new object[] { Object.Current, this };
-            object result = CI.Invoke(parameters);
+            }
+
+            object[] parameters = new object[] { obj.Current, this };
+            object result = ci.Invoke(parameters);
+
             return (ObjectSelectionWrapper<T>)result;
         }
 
-        public ObjectSelectionWrapper<T> FindObjectWithItem(T Object)
+        /// <summary>
+        /// TODO: Documentation FindObjectWithItem
+        /// </summary>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public ObjectSelectionWrapper<T> FindObjectWithItem(T obj)
         {
-            return Find(new Predicate<ObjectSelectionWrapper<T>>(
-                            delegate(ObjectSelectionWrapper<T> target)
-                            {
-                                return target.Item.Equals(Object);
-                            }));
+            return this.Find(new Predicate<ObjectSelectionWrapper<T>>(
+                             (ObjectSelectionWrapper<T> target) =>
+                             {
+                                 return target.Item.Equals(obj);
+                             }));
         }
 
         /*
@@ -198,39 +226,50 @@ namespace PresentationControls
             return List.ToArray();
         }
         */
+
+        /// <summary>
+        /// TODO: Documentation Populate
+        /// </summary>
         private void Populate()
         {
-            Clear();
+            this.Clear();
             /*
             for(int Index = 0; Index <= _Source.Count -1; Index++)
                 Add(CreateSelectionWrapper(_Source[Index]));
              */
-            IEnumerator Enumerator = _Source.GetEnumerator();
-            if (Enumerator != null)
-                while (Enumerator.MoveNext())
-                    Add(CreateSelectionWrapper(Enumerator));
-        }
+            IEnumerator enumerator = _source.GetEnumerator();
 
+            if (enumerator != null)
+            {
+                while (enumerator.MoveNext())
+                    this.Add(CreateSelectionWrapper(enumerator));
+            }
+        }
         #endregion
 
         #region EVENT HANDLERS
-
+        /// <summary>
+        /// TODO: Documentation ListSelectionWrapper_ListChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ListSelectionWrapper_ListChanged(object sender, ListChangedEventArgs e)
         {
             switch (e.ListChangedType)
             {
                 case ListChangedType.ItemAdded:
-                    Add(CreateSelectionWrapper((IEnumerator)((IBindingList)_Source)[e.NewIndex]));
+                    this.Add(this.CreateSelectionWrapper((IEnumerator)((IBindingList)_source)[e.NewIndex]));
                     break;
+
                 case ListChangedType.ItemDeleted:
-                    Remove(FindObjectWithItem((T)((IBindingList)_Source)[e.OldIndex]));
+                    this.Remove(this.FindObjectWithItem((T)((IBindingList)_source)[e.OldIndex]));
                     break;
+
                 case ListChangedType.Reset:
-                    Populate();
+                    this.Populate();
                     break;
             }
         }
-
         #endregion
     }
 }

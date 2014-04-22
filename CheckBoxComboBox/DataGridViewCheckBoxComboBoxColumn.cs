@@ -19,6 +19,10 @@ namespace PresentationControls
         /// TODO: Documentation Member
         /// </summary>
         private String _displayMemberSingleItem = "Name";
+        /// <summary>
+        /// TODO: Documentation Member
+        /// </summary>
+        private String _textSeparator = ", ";
         #endregion
 
         #region PROPERTIES
@@ -32,6 +36,17 @@ namespace PresentationControls
         {
             get { return _displayMemberSingleItem; }
             set { _displayMemberSingleItem = value; }
+        }
+        /// <summary>
+        /// TODO: Documentation Property
+        /// </summary>
+        [Category("Data")]
+        [Description("")]
+        [DefaultValue(", ")]
+        public String TextSeparator
+        {
+            get { return _textSeparator; }
+            set { _textSeparator = value; }
         }
         #endregion
 
@@ -55,6 +70,7 @@ namespace PresentationControls
             DataGridViewCheckBoxComboBoxColumn col = base.Clone() as DataGridViewCheckBoxComboBoxColumn;
 
             col.DisplayMemberSingleItem = this._displayMemberSingleItem;
+            col.TextSeparator = this._textSeparator;
 
             return col;
         }
@@ -65,7 +81,7 @@ namespace PresentationControls
         /// </summary>
         public class DataGridViewCheckBoxComboBoxCell : DataGridViewComboBoxCell
         {
-            #region PROPERTIE
+            #region PROPERTIES
             /// <summary>
             /// Return the entityType of the editing ctl that UpDownCell uses
             /// </summary>
@@ -101,17 +117,23 @@ namespace PresentationControls
                 {
                     Dictionary<String, Object> parsedValues = value as Dictionary<String, Object>;
 
-                    foreach (KeyValuePair<String, Object> parsedValue in parsedValues)
+                    String[] keys = new String[parsedValues.Keys.Count];
+                    parsedValues.Keys.CopyTo(keys, 0);
+                    Array.Sort<String>(keys);
+
+                    DataGridViewCheckBoxComboBoxColumn config = this.OwningColumn as DataGridViewCheckBoxComboBoxColumn;
+
+                    foreach (String key in keys)
                     {
                         result = String.Format(CultureInfo.CurrentCulture,
-                                               "{0}, {1}",
-                                               result, parsedValue.Key);
+                                               "{0}{1}{2}",
+                                               result, config.TextSeparator, key);
                     }
                 }
 
                 if (!String.IsNullOrEmpty(result))
                     result = result.Substring(2, result.Length - 2);
-                
+
                 return result;
             }
 
@@ -132,7 +154,12 @@ namespace PresentationControls
                 foreach (CheckBoxComboBoxItem item in control.CheckBoxItems)
                 {
                     if (item.Checked)
-                        parsedValues.Add(item.Text, item.ComboBoxItem);
+                    {
+                        if (control.DataSource.GetType() == typeof(ListSelectionWrapper<Object>))
+                            parsedValues.Add(item.Text, (item.ComboBoxItem as ObjectSelectionWrapper<Object>).Item);
+                        else
+                            parsedValues.Add(item.Text, item.ComboBoxItem);
+                    }
                 }
 
                 return parsedValues;
@@ -151,6 +178,7 @@ namespace PresentationControls
                 DataGridViewCheckBoxComboBoxControl control = this.DataGridView.EditingControl as DataGridViewCheckBoxComboBoxControl;
                 DataGridViewCheckBoxComboBoxColumn config = this.OwningColumn as DataGridViewCheckBoxComboBoxColumn;
                 control.DisplayMemberSingleItem = config.DisplayMemberSingleItem;
+                control.TextSeparator = config.TextSeparator;
 
                 foreach (CheckBoxComboBoxItem item in control.CheckBoxItems)
                     item.Checked = false;

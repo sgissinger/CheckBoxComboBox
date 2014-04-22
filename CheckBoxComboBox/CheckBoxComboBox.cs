@@ -25,77 +25,100 @@ namespace PresentationControls
     public partial class CheckBoxComboBox : PopupComboBox
     {
         #region CONSTRUCTOR
-
+        /// <summary>
+        /// TODO: Documentation Constructor
+        /// </summary>
         public CheckBoxComboBox()
             : base()
         {
             InitializeComponent();
-            _CheckBoxProperties = new CheckBoxProperties();
-            _CheckBoxProperties.PropertyChanged += new EventHandler(_CheckBoxProperties_PropertyChanged);
+
+            _checkBoxProperties = new CheckBoxProperties();
+            _checkBoxProperties.PropertyChanged += new EventHandler(_CheckBoxProperties_PropertyChanged);
+
             // Dumps the ListControl in a(nother) Container to ensure the ScrollBar on the ListControl does not
             // Paint over the Size grip. Setting the Padding or Margin on the Popup or host control does
             // not work as I expected. I don't think it can work that way.
             CheckBoxComboBoxListControlContainer ContainerControl = new CheckBoxComboBoxListControlContainer();
-            _CheckBoxComboBoxListControl = new CheckBoxComboBoxListControl(this);
-            _CheckBoxComboBoxListControl.Items.CheckBoxCheckedChanged += new EventHandler(Items_CheckBoxCheckedChanged);
-            ContainerControl.Controls.Add(_CheckBoxComboBoxListControl);
+            _checkBoxComboBoxListControl = new CheckBoxComboBoxListControl(this);
+            _checkBoxComboBoxListControl.Items.CheckBoxCheckedChanged += new EventHandler(Items_CheckBoxCheckedChanged);
+            ContainerControl.Controls.Add(_checkBoxComboBoxListControl);
             // This padding spaces neatly on the left-hand side and allows space for the size grip at the bottom.
             ContainerControl.Padding = new Padding(4, 0, 0, 14);
             // The ListControl FILLS the ListContainer.
-            _CheckBoxComboBoxListControl.Dock = DockStyle.Fill;
+            _checkBoxComboBoxListControl.Dock = DockStyle.Fill;
             // The DropDownControl used by the base class. Will be wrapped in a popup by the base class.
             DropDownControl = ContainerControl;
             // Must be set after the DropDownControl is set, since the popup is recreated.
             // NOTE: I made the dropDown protected so that it can be accessible here. It was private.
             dropDown.Resizable = true;
         }
-
         #endregion
 
-        #region PRIVATE FIELDS
-
+        #region MEMBERS
         /// <summary>
         /// The checkbox list control. The public CheckBoxItems property provides a direct reference to its Items.
         /// </summary>
-        internal CheckBoxComboBoxListControl _CheckBoxComboBoxListControl;
+        internal CheckBoxComboBoxListControl _checkBoxComboBoxListControl;
         /// <summary>
         /// In DataBinding operations, this property will be used as the DisplayMember in the CheckBoxComboBoxListBox.
         /// The normal/existing "DisplayMember" property is used by the TextBox of the ComboBox to display 
         /// a concatenated Text of the items selected. This concatenation and its formatting however is controlled 
         /// by the Binded object, since it owns that property.
         /// </summary>
-        private string _DisplayMemberSingleItem = null;
-        internal bool _MustAddHiddenItem = false;
-
+        private String _displayMemberSingleItem = null;
+        /// <summary>
+        /// TODO: Documentation Member
+        /// </summary>
+        private String _textSeparator = ", ";
+        /// <summary>
+        /// TODO: Documentation Member
+        /// </summary>
+        internal Boolean _mustAddHiddenItem = false;
         #endregion
 
         #region PRIVATE OPERATIONS
-
         /// <summary>
         /// Builds a CSV string of the items selected.
         /// </summary>
         internal string GetCSVText(bool skipFirstItem)
         {
-            string ListText = String.Empty;
-            int StartIndex =
-                DropDownStyle == ComboBoxStyle.DropDownList 
-                && DataSource == null
-                && skipFirstItem
-                    ? 1
-                    : 0;
-            for (int Index = StartIndex; Index <= _CheckBoxComboBoxListControl.Items.Count - 1; Index++)
+            String listText = String.Empty;
+
+            Int32 startIndex = this.DropDownStyle == ComboBoxStyle.DropDownList
+                                    && this.DataSource == null
+                                    && skipFirstItem ? 1 : 0;
+
+            for (Int32 index = startIndex; index <= _checkBoxComboBoxListControl.Items.Count - 1; index++)
             {
-                CheckBoxComboBoxItem Item = _CheckBoxComboBoxListControl.Items[Index];
-                if (Item.Checked)
-                    ListText += string.IsNullOrEmpty(ListText) ? Item.Text : String.Format(", {0}", Item.Text);
+                CheckBoxComboBoxItem item = _checkBoxComboBoxListControl.Items[index];
+
+                if (item.Checked)
+                    listText += String.IsNullOrEmpty(listText) ? item.Text : String.Format("{0}{1}", this.TextSeparator, item.Text);
             }
-            return ListText;
+            return listText;
         }
 
+        /// <summary>
+        /// TODO: Documentation WndProc
+        /// </summary>
+        /// <param name="m"></param>
+        protected override void WndProc(ref Message m)
+        {
+            // 323 : Item Added
+            // 331 : Clearing
+            if (this.DropDownStyle == ComboBoxStyle.DropDownList &&
+                this.DataSource == null &&
+                m.Msg == 331)
+            {
+                _mustAddHiddenItem = true;
+            }
+
+            base.WndProc(ref m);
+        }
         #endregion
 
-        #region PUBLIC PROPERTIES
-
+        #region PROPERTIES
         /// <summary>
         /// A direct reference to the Items of CheckBoxComboBoxListControl.
         /// You can use it to Get or Set the Checked status of items manually if you want.
@@ -108,11 +131,11 @@ namespace PresentationControls
         {
             get 
             { 
-                // Added to ensure the CheckBoxItems are ALWAYS
-                // available for modification via code.
-                if (_CheckBoxComboBoxListControl.Items.Count != Items.Count)
-                    _CheckBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
-                return _CheckBoxComboBoxListControl.Items; 
+                // Added to ensure the CheckBoxItems are ALWAYS available for modification via code.
+                if (_checkBoxComboBoxListControl.Items.Count != Items.Count)
+                    _checkBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
+
+                return _checkBoxComboBoxListControl.Items; 
             }
         }
         /// <summary>
@@ -124,9 +147,10 @@ namespace PresentationControls
             set
             {
                 base.DataSource = value;
-                if (!string.IsNullOrEmpty(ValueMember))
-                    // This ensures that at least the checkboxitems are available to be initialised.
-                    _CheckBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
+
+                // This ensures that at least the checkboxitems are available to be initialised.
+                if (!String.IsNullOrEmpty(this.ValueMember))
+                    _checkBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
             }
         }
         /// <summary>
@@ -138,9 +162,10 @@ namespace PresentationControls
             set
             {
                 base.ValueMember = value;
-                if (!string.IsNullOrEmpty(ValueMember))
-                    // This ensures that at least the checkboxitems are available to be initialised.
-                    _CheckBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
+
+                // This ensures that at least the checkboxitems are available to be initialised.
+                if (!String.IsNullOrEmpty(this.ValueMember))
+                    _checkBoxComboBoxListControl.SynchroniseControlsWithComboBoxItems();
             }
         }
         /// <summary>
@@ -151,8 +176,25 @@ namespace PresentationControls
         /// </summary>
         public string DisplayMemberSingleItem
         {
-            get { if (string.IsNullOrEmpty(_DisplayMemberSingleItem)) return DisplayMember; else return _DisplayMemberSingleItem; }
-            set { _DisplayMemberSingleItem = value; }
+            get
+            {
+                if (String.IsNullOrEmpty(_displayMemberSingleItem))
+                    return this.DisplayMember;
+                else
+                    return _displayMemberSingleItem;
+            }
+            set { _displayMemberSingleItem = value; }
+        }
+        /// <summary>
+        /// TODO: Documentation Property
+        /// </summary>
+        [Browsable(true)]
+        [DefaultValue(", ")]
+        [DesignerSerializationVisibility(DesignerSerializationVisibility.Visible)]
+        public string TextSeparator
+        {
+            get { return _textSeparator; }
+            set { _textSeparator = value; }
         }
         /// <summary>
         /// Made this property Browsable again, since the Base Popup hides it. This class uses it again.
@@ -168,42 +210,50 @@ namespace PresentationControls
         {
             get { return base.Items; }
         }
-
         #endregion
 
         #region EVENTS & EVENT HANDLERS
-
+        /// <summary>
+        /// TODO: Documentation Event
+        /// </summary>
         public event EventHandler CheckBoxCheckedChanged;
 
+        /// <summary>
+        /// TODO: Documentation Items_CheckBoxCheckedChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void Items_CheckBoxCheckedChanged(object sender, EventArgs e)
         {
-            OnCheckBoxCheckedChanged(sender, e);
+            this.OnCheckBoxCheckedChanged(sender, e);
         }
 
-        #endregion
-
-        #region EVENT CALLERS and OVERRIDES e.g. OnResize()
-
+        /// <summary>
+        /// TODO: Documentation OnCheckBoxCheckedChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         protected virtual void OnCheckBoxCheckedChanged(object sender, EventArgs e)
         {
-            string ListText = GetCSVText(true);
+            String listText = this.GetCSVText(true);
+
             // The DropDownList style seems to require that the text
             // part of the "textbox" should match a single item.
-            if (DropDownStyle != ComboBoxStyle.DropDownList)
-                Text = ListText;
+            if (this.DropDownStyle != ComboBoxStyle.DropDownList)
+                this.Text = listText;
+
             // This refreshes the Text of the first item (which is not visible)
-            else if (DataSource == null)
+            else if (this.DataSource == null)
             {
-                Items[0] = ListText;
+                this.Items[0] = listText;
+
                 // Keep the hidden item and first checkbox item in 
-                // sync in order to ensure the Synchronise process
-                // can match the items.
-                CheckBoxItems[0].ComboBoxItem = ListText;
+                // sync in order to ensure the Synchronise process can match the items.
+                this.CheckBoxItems[0].ComboBoxItem = listText;
             }
 
-            EventHandler handler = CheckBoxCheckedChanged;
-            if (handler != null)
-                handler(sender, e);
+            if (this.CheckBoxCheckedChanged != null)
+                this.CheckBoxCheckedChanged(sender, e);
         }
 
         /// <summary>
@@ -215,25 +265,27 @@ namespace PresentationControls
         {
             base.OnDropDownStyleChanged(e);
 
-            if (DropDownStyle == ComboBoxStyle.DropDownList
-                && DataSource == null
-                && !DesignMode)
-                _MustAddHiddenItem = true;
+            if (this.DropDownStyle == ComboBoxStyle.DropDownList &&
+                this.DataSource == null && !this.DesignMode)
+            {
+                _mustAddHiddenItem = true;
+            }
         }
 
+        /// <summary>
+        /// When the ComboBox is resized, the width of the dropdown 
+        /// is also resized to match the width of the ComboBox. I think it looks better.
+        /// </summary>
+        /// <param name="e"></param>
         protected override void OnResize(EventArgs e)
         {
-            // When the ComboBox is resized, the width of the dropdown 
-            // is also resized to match the width of the ComboBox. I think it looks better.
-            Size Size = new Size(Width, DropDownControl.Height);
-            dropDown.Size = Size;
+            dropDown.Size = new Size(this.Width, this.DropDownControl.Height);
+
             base.OnResize(e);
         }
-
         #endregion
 
         #region PUBLIC OPERATIONS
-
         /// <summary>
         /// A function to clear/reset the list.
         /// (Ubiklou : http://www.codeproject.com/KB/combobox/extending_combobox.aspx?msg=2526813#xx2526813xx)
@@ -242,25 +294,27 @@ namespace PresentationControls
         {
             this.Items.Clear();
 
-            if (DropDownStyle == ComboBoxStyle.DropDownList && DataSource == null)
-                _MustAddHiddenItem = true;                
+            if (this.DropDownStyle == ComboBoxStyle.DropDownList && this.DataSource == null)
+                _mustAddHiddenItem = true;                
         }
         /// <summary>
         /// Uncheck all items.
         /// </summary>
         public void ClearSelection()
         {
-            foreach (CheckBoxComboBoxItem Item in CheckBoxItems)
-                if (Item.Checked)
-                    Item.Checked = false;
+            foreach (CheckBoxComboBoxItem item in CheckBoxItems)
+            {
+                if (item.Checked)
+                    item.Checked = false;
+            }
         }
-
         #endregion
 
         #region CHECKBOX PROPERTIES (DEFAULTS)
-
-        private CheckBoxProperties _CheckBoxProperties;
-
+        /// <summary>
+        /// TODO: Documentation Member
+        /// </summary>
+        private CheckBoxProperties _checkBoxProperties;
         /// <summary>
         /// The properties that will be assigned to the checkboxes as default values.
         /// </summary>
@@ -268,31 +322,24 @@ namespace PresentationControls
         [Browsable(true)]
         public CheckBoxProperties CheckBoxProperties
         {
-            get { return _CheckBoxProperties; }
-            set { _CheckBoxProperties = value; _CheckBoxProperties_PropertyChanged(this, EventArgs.Empty); }
+            get { return _checkBoxProperties; }
+            set
+            {
+                _checkBoxProperties = value;
+                _CheckBoxProperties_PropertyChanged(this, EventArgs.Empty);
+            }
         }
-
+        /// <summary>
+        /// TODO: Documentation _CheckBoxProperties_PropertyChanged
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void _CheckBoxProperties_PropertyChanged(object sender, EventArgs e)
         {
-            foreach (CheckBoxComboBoxItem Item in CheckBoxItems)
-                Item.ApplyProperties(CheckBoxProperties);
+            foreach (CheckBoxComboBoxItem item in this.CheckBoxItems)
+                item.ApplyProperties(this.CheckBoxProperties);
         }
-
         #endregion
-
-        protected override void WndProc(ref Message m)
-        {
-            // 323 : Item Added
-            // 331 : Clearing
-            if (m.Msg == 331
-                && DropDownStyle == ComboBoxStyle.DropDownList
-                && DataSource == null)
-            {
-                _MustAddHiddenItem = true;
-            }
-            
-            base.WndProc(ref m);
-        }
     }
 
     /// <summary>
@@ -308,13 +355,14 @@ namespace PresentationControls
         public CheckBoxComboBoxListControlContainer()
             : base()
         {
-            BackColor = SystemColors.Window;
-            BorderStyle = BorderStyle.FixedSingle;
-            AutoScaleMode = AutoScaleMode.Inherit;
-            ResizeRedraw = true;
+            this.BackColor = SystemColors.Window;
+            this.BorderStyle = BorderStyle.FixedSingle;
+            this.AutoScaleMode = AutoScaleMode.Inherit;
+            this.ResizeRedraw = true;
+
             // If you don't set this, then resize operations cause an error in the base class.
-            MinimumSize = new Size(1, 1);
-            MaximumSize = new Size(500, 500);
+            this.MinimumSize = new Size(1, 1);
+            this.MaximumSize = new Size(500, 500);
         }
         #endregion
 
@@ -326,10 +374,9 @@ namespace PresentationControls
         /// <param name="m"></param>
         protected override void WndProc(ref Message m)
         {
-            if ((Parent as Popup).ProcessResizing(ref m))
-            {
+            if ((this.Parent as Popup).ProcessResizing(ref m))
                 return;
-            }
+
             base.WndProc(ref m);
         }
         #endregion
@@ -347,9 +394,10 @@ namespace PresentationControls
         public CheckBoxComboBoxListControl(CheckBoxComboBox owner)
             : base()
         {
-            DoubleBuffered = true;
-            _CheckBoxComboBox = owner;
-            _Items = new CheckBoxComboBoxItemList(_CheckBoxComboBox);
+            this.DoubleBuffered = true;
+
+            _checkBoxComboBox = owner;
+            _items = new CheckBoxComboBoxItemList(_checkBoxComboBox);
             BackColor = SystemColors.Window;
             // AutoScaleMode = AutoScaleMode.Inherit;
             AutoScroll = true;
@@ -366,15 +414,15 @@ namespace PresentationControls
         /// <summary>
         /// Simply a reference to the CheckBoxComboBox.
         /// </summary>
-        private CheckBoxComboBox _CheckBoxComboBox;
+        private CheckBoxComboBox _checkBoxComboBox;
         /// <summary>
         /// A Typed list of ComboBoxCheckBoxItems.
         /// </summary>
-        private CheckBoxComboBoxItemList _Items;
+        private CheckBoxComboBoxItemList _items;
 
         #endregion
 
-        public CheckBoxComboBoxItemList Items { get { return _Items; } }
+        public CheckBoxComboBoxItemList Items { get { return _items; } }
 
         #region RESIZE OVERRIDE REQUIRED BY THE POPUP CONTROL
 
@@ -408,67 +456,69 @@ namespace PresentationControls
         public void SynchroniseControlsWithComboBoxItems()
         {
             SuspendLayout();
-            if (_CheckBoxComboBox._MustAddHiddenItem && _CheckBoxComboBox.DataSource == null)
+
+            if (_checkBoxComboBox._mustAddHiddenItem && _checkBoxComboBox.DataSource == null)
             {
-                _CheckBoxComboBox.Items.Insert(
-                    0, _CheckBoxComboBox.GetCSVText(false)); // INVISIBLE ITEM
-                _CheckBoxComboBox.SelectedIndex = 0;
-                _CheckBoxComboBox._MustAddHiddenItem = false;
+                _checkBoxComboBox.Items.Insert(0, _checkBoxComboBox.GetCSVText(false)); // INVISIBLE ITEM
+                _checkBoxComboBox.SelectedIndex = 0;
+                _checkBoxComboBox._mustAddHiddenItem = false;
             }
             Controls.Clear();
+
             #region Disposes all items that are no longer in the combo box list
 
-            for (int Index = _Items.Count - 1; Index >= 0; Index--)
+            for (int Index = _items.Count - 1; Index >= 0; Index--)
             {
-                CheckBoxComboBoxItem Item = _Items[Index];
-                if (!_CheckBoxComboBox.Items.Contains(Item.ComboBoxItem))
+                CheckBoxComboBoxItem Item = _items[Index];
+                if (!_checkBoxComboBox.Items.Contains(Item.ComboBoxItem))
                 {
-                    _Items.Remove(Item);
+                    _items.Remove(Item);
                     Item.Dispose();
                 }
             }
-
             #endregion
+
             #region Recreate the list in the same order of the combo box items
 
-            bool HasHiddenItem = 
-                _CheckBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
-                && _CheckBoxComboBox.DataSource == null
-                && !DesignMode;
+            bool HasHiddenItem = _checkBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
+                                    && _checkBoxComboBox.DataSource == null
+                                    && !this.DesignMode;
 
-            CheckBoxComboBoxItemList NewList = new CheckBoxComboBoxItemList(_CheckBoxComboBox);
-            for(int Index0 = 0; Index0 <= _CheckBoxComboBox.Items.Count - 1; Index0 ++)
+            CheckBoxComboBoxItemList NewList = new CheckBoxComboBoxItemList(_checkBoxComboBox);
+
+            for(int Index0 = 0; Index0 <= _checkBoxComboBox.Items.Count - 1; Index0 ++)
             {
-                object Object = _CheckBoxComboBox.Items[Index0];
-                CheckBoxComboBoxItem Item = null;
+                Object obj = _checkBoxComboBox.Items[Index0];
+                CheckBoxComboBoxItem item = null;
+
                 // The hidden item could match any other item when only
                 // one other item was selected.
-                if (Index0 == 0 && HasHiddenItem && _Items.Count > 0)
-                    Item = _Items[0];
+                if (Index0 == 0 && HasHiddenItem && _items.Count > 0)
+                    item = _items[0];
                 else
                 {
                     int StartIndex = HasHiddenItem
                         ? 1 // Skip the hidden item, it could match 
                         : 0;
-                    for (int Index1 = StartIndex; Index1 <= _Items.Count - 1; Index1++)
+                    for (int Index1 = StartIndex; Index1 <= _items.Count - 1; Index1++)
                     {
-                        if (_Items[Index1].ComboBoxItem == Object)
+                        if (_items[Index1].ComboBoxItem == obj)
                         {
-                            Item = _Items[Index1];
+                            item = _items[Index1];
                             break;
                         }
                     }
                 }
-                if (Item == null)
+                if (item == null)
                 {
-                    Item = new CheckBoxComboBoxItem(_CheckBoxComboBox, Object);
-                    Item.ApplyProperties(_CheckBoxComboBox.CheckBoxProperties);
+                    item = new CheckBoxComboBoxItem(_checkBoxComboBox, obj);
+                    item.ApplyProperties(_checkBoxComboBox.CheckBoxProperties);
                 }
-                NewList.Add(Item);
-                Item.Dock = DockStyle.Top;
+                NewList.Add(item);
+                item.Dock = DockStyle.Top;
             }
-            _Items.Clear();
-            _Items.AddRange(NewList);
+            _items.Clear();
+            _items.AddRange(NewList);
 
             #endregion
             #region Add the items to the controls in reversed order to maintain correct docking order
@@ -487,10 +537,10 @@ namespace PresentationControls
             #endregion
 
             // Keep the first item invisible
-            if (_CheckBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
-                && _CheckBoxComboBox.DataSource == null
+            if (_checkBoxComboBox.DropDownStyle == ComboBoxStyle.DropDownList
+                && _checkBoxComboBox.DataSource == null
                 && !DesignMode)
-                _CheckBoxComboBox.CheckBoxItems[0].Visible = false; 
+                _checkBoxComboBox.CheckBoxItems[0].Visible = false; 
             
             ResumeLayout();
         }

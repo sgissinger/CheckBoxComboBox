@@ -17,10 +17,12 @@ statuses.Add(new Status(3, "Inserted"));
 statuses.Add(new Status(4, "Updated"));
 statuses.Add(new Status(5, "Deleted"));
 
-
 DataGridViewCheckBoxComboBoxColumn comboboxColumn = new DataGridViewCheckBoxComboBoxColumn();
 
-comboboxColumn.DataSource = new ListSelectionWrapper<Status>(statuses);
+ListSelectionWrapper<Object> wrappedList = new ListSelectionWrapper<Object>(statuses)
+wrappedList.TextSeparator = comboboxColumn.TextSeparator;
+
+comboboxColumn.DataSource = wrappedList;
 comboboxColumn.ValueMember = "Selected";
 comboboxColumn.DisplayMemberSingleItem = "Name";
 comboboxColumn.DisplayMember = "NameConcatenated";
@@ -29,9 +31,9 @@ comboboxColumn.DisplayMember = "NameConcatenated";
 DataGridView dataGridView = new DataGridView();
 dataGridView.Columns.Add(comboboxColumn);
 
-...
+[...]
 
-var values = dataGridView[0,0].Value as Dictionary<String, Object>;
+var values = dataGridView[0, 0].Value as Dictionary<String, Object>;
 
 foreach (var val in values)
 {
